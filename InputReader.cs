@@ -43,6 +43,7 @@ public class InputReader : ScriptableObject, Controls.IGameplayActions {
     
     #endregion Enable/Disable input
 
+    //Put all of your input action events inside of this region
     #region Input callbacks
 
     public void OnMovement(InputAction.CallbackContext ctx)
@@ -75,6 +76,7 @@ public class InputReader : ScriptableObject, Controls.IGameplayActions {
     
     #endregion Input callbacks
 
+    //This can be removed if you wont be using my custom joystick
     //Needed to create a custom joystick for this callback to function properly
     #region Custom Input Callbacks
 
