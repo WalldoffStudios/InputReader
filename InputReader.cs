@@ -1,69 +1,85 @@
-﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 [CreateAssetMenu(fileName = "inputReader", menuName = "ScriptableObjects/Gameplay/InputReader")]
-public class InputReader : ScriptableObject, Controls.IGameplayActions
-{
-    //Gameplay
-    public event UnityAction BoostEvent;
-    public event UnityAction<Vector2> ChargeEvent;
-    public event UnityAction LetGoEvent;
+public class InputReader : ScriptableObject, Controls.IGameplayActions {
+    
+    //Gameplay events, all input events you use should be listed here
+    //subscribe to these from scripts that will be affected by your input
+    #region Events
 
+    public event UnityAction<Vector2> MoveEvent;
+    public event UnityAction<bool> StopEvent;
+    public event UnityAction<Vector2> AimEvent;
+    public event UnityAction<bool> ShootingEvent;
+    public event UnityAction InteractEvent;
+
+    #endregion Events
+
+
+    //inputActions reference
     private Controls _controls;
+    
+    #region Callback functions
 
-    private void OnEnable()
-    {
-        if (_controls == null)
-        {
+    private void OnEnable() {
+        if (_controls == null) {
             _controls = new Controls();
-            _controls.gameplay.SetCallbacks(this);
+            _controls.Gameplay.SetCallbacks(this);
         }
         EnableGameplayInput();
     }
 
-    private void OnDisable()
-    {
+    private void OnDisable() {
         DisableAllInput();
     }
+    
+    #endregion Callback functions
 
-    //will send aimDirection when using
-    public void OnCharge(InputAction.CallbackContext ctx)
+    #region Enable/Disable input
+    public void EnableGameplayInput() => _controls.Gameplay.Enable();
+    public void DisableAllInput() => _controls.Gameplay.Disable();
+    
+    #endregion Enable/Disable input
+
+    #region Input callbacks
+
+    public void OnMovement(InputAction.CallbackContext ctx)
     {
-        //you might only need the canceled part, test it out mate
-        if (ctx.phase == InputActionPhase.Performed)
-        {
-            ChargeEvent?.Invoke(ctx.ReadValue<Vector2>());
+        if (ctx.phase == InputActionPhase.Started) {
+            StopEvent?.Invoke(false);
+        }
+        if (ctx.phase == InputActionPhase.Performed) {
+            MoveEvent?.Invoke(ctx.ReadValue<Vector2>());
+        }
+        if (ctx.phase == InputActionPhase.Canceled) {
+            StopEvent?.Invoke(true);
         }
     }
 
-    public void OnLetGo(InputAction.CallbackContext ctx)
+    public void OnAiming(InputAction.CallbackContext ctx)
     {
-        //will sling away the snus when you let go of the aim button
-        if (ctx.phase == InputActionPhase.Canceled)
-        {
-            LetGoEvent?.Invoke();
+        if (ctx.phase == InputActionPhase.Performed) {
+            AimEvent?.Invoke(ctx.ReadValue<Vector2>());
         }
     }
 
-    //will boost the snus a little bit in air when tapepd
-    public void OnBoost(InputAction.CallbackContext ctx)
+    public void OnInteracting(InputAction.CallbackContext ctx)
     {
-        //will attack when you let go of the aim button
-        if (ctx.phase == InputActionPhase.Canceled)
+        if (ctx.phase == InputActionPhase.Started)
         {
-            BoostEvent?.Invoke();
+            InteractEvent?.Invoke();
         }
     }
     
-    public void EnableGameplayInput()
-    {
-        _controls.gameplay.Enable();
-    }
+    #endregion Input callbacks
 
-    public void DisableAllInput()
-    {
-        _controls.gameplay.Disable();
-    }
+    //Needed to create a custom joystick for this callback to function properly
+    #region Custom Input Callbacks
+
+    //Used to keep track of player holding down trigger
+    public void OnShoot(bool shoot) => ShootingEvent?.Invoke(shoot);
+
+    #endregion Custom Input Callback
 }
