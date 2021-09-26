@@ -9,11 +9,19 @@ public class InputReader : ScriptableObject, Controls.IGameplayActions {
     //subscribe to these from scripts that will be affected by your input
     #region Events
 
+    //WASD || Joysticks
     public event UnityAction<Vector2> MoveEvent;
     public event UnityAction<bool> StopEvent;
-    public event UnityAction<Vector2> AimEvent;
-    public event UnityAction<bool> ShootingEvent;
-    public event UnityAction InteractEvent;
+    public event UnityAction<Vector2> LookEvent;
+    
+    //Space ||  button south
+    public event UnityAction JumpEvent;
+    
+    //Right MB || left trigger
+    public event UnityAction<bool> AimEvent;
+
+    //Left MB || right trigger
+    public event UnityAction<bool> ShootEvent;
 
     #endregion Events
 
@@ -23,23 +31,26 @@ public class InputReader : ScriptableObject, Controls.IGameplayActions {
     
     #region Callback functions
 
-    private void OnEnable() {
-        if (_controls == null) {
+    private void OnEnable() 
+    {
+        if (_controls == null) 
+        {
             _controls = new Controls();
             _controls.Gameplay.SetCallbacks(this);
         }
         EnableGameplayInput();
     }
 
-    private void OnDisable() {
+    private void OnDisable() 
+    {
         DisableAllInput();
     }
     
     #endregion Callback functions
 
     #region Enable/Disable input
-    public void EnableGameplayInput() => _controls.Gameplay.Enable();
-    public void DisableAllInput() => _controls.Gameplay.Disable();
+    private void EnableGameplayInput() => _controls.Gameplay.Enable();
+    private void DisableAllInput() => _controls.Gameplay.Disable();
     
     #endregion Enable/Disable input
 
@@ -48,40 +59,59 @@ public class InputReader : ScriptableObject, Controls.IGameplayActions {
 
     public void OnMovement(InputAction.CallbackContext ctx)
     {
-        if (ctx.phase == InputActionPhase.Started) {
+        if (ctx.phase == InputActionPhase.Started) 
+        {
             StopEvent?.Invoke(false);
         }
-        if (ctx.phase == InputActionPhase.Performed) {
+        if (ctx.phase == InputActionPhase.Performed) 
+        {
             MoveEvent?.Invoke(ctx.ReadValue<Vector2>());
         }
-        if (ctx.phase == InputActionPhase.Canceled) {
+        if (ctx.phase == InputActionPhase.Canceled) 
+        {
             StopEvent?.Invoke(true);
         }
     }
 
-    public void OnAiming(InputAction.CallbackContext ctx)
+    public void OnLook(InputAction.CallbackContext ctx)
     {
-        if (ctx.phase == InputActionPhase.Performed) {
-            AimEvent?.Invoke(ctx.ReadValue<Vector2>());
+        if (ctx.phase == InputActionPhase.Performed) 
+        {
+            LookEvent?.Invoke(ctx.ReadValue<Vector2>());
         }
     }
 
-    public void OnInteracting(InputAction.CallbackContext ctx)
+    public void OnJump(InputAction.CallbackContext ctx)
     {
         if (ctx.phase == InputActionPhase.Started)
         {
-            InteractEvent?.Invoke();
+            JumpEvent?.Invoke();
         }
     }
-    
+
+    public void OnAim(InputAction.CallbackContext ctx)
+    {
+        if (ctx.phase == InputActionPhase.Started)
+        {
+            AimEvent?.Invoke(true);
+        }
+        if (ctx.phase == InputActionPhase.Canceled)
+        {
+            AimEvent?.Invoke(false);
+        }
+    }
+
+    public void OnShoot(InputAction.CallbackContext ctx)
+    {
+        if (ctx.phase == InputActionPhase.Started)
+        {
+            ShootEvent?.Invoke(true);
+        }
+        if (ctx.phase == InputActionPhase.Canceled)
+        {
+            ShootEvent?.Invoke(false);
+        }
+    }
+
     #endregion Input callbacks
-
-    //This can be removed if you wont be using my custom joystick
-    //Needed to create a custom joystick for this callback to function properly
-    #region Custom Input Callbacks
-
-    //Used to keep track of player holding down trigger
-    public void OnShoot(bool shoot) => ShootingEvent?.Invoke(shoot);
-
-    #endregion Custom Input Callback
 }
